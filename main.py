@@ -37,9 +37,8 @@ ciphers_for_header = {
 def check_files(directory_to_check):
     """Check files in the specified directory for encryption."""
     # Get recent files
-    recent_files_dir = glob.glob(
-        os.path.join(r"C:\Users\PMY\AppData\Roaming\Microsoft\Windows\Recent", "*.*")
-    )
+    recent_files_dir = glob.glob(os.path.join(os.getenv("AppData"), "Microsoft", "Windows", "Recent", "*.*"))
+
     recent_files_names = {
         os.path.splitext(os.path.basename(file))[0] for file in recent_files_dir
     }

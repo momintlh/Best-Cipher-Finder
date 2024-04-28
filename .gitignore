@@ -8,6 +8,7 @@ Keys
 files/
 EncryptionResults/
 EncryptionWithBestCiphers/
+test.py
 
 # C extensions
 *.so
