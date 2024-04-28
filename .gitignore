@@ -3,6 +3,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# custom:
+Keys
+files/
+EncryptionResults/
+EncryptionWithBestCiphers/
+
 # C extensions
 *.so
 
