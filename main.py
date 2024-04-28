@@ -37,7 +37,9 @@ ciphers_for_header = {
 def check_files(directory_to_check):
     """Check files in the specified directory for encryption."""
     # Get recent files
-    recent_files_dir = glob.glob(os.path.join(os.getenv("AppData"), "Microsoft", "Windows", "Recent", "*.*"))
+    recent_files_dir = glob.glob(
+        os.path.join(os.getenv("AppData"), "Microsoft", "Windows", "Recent", "*.*")
+    )
 
     recent_files_names = {
         os.path.splitext(os.path.basename(file))[0] for file in recent_files_dir
@@ -110,6 +112,7 @@ def encryption_time_estimate(file_path, output_path, cipher_func, *args):
     cipher_func(file_path, output_path, *args)
     end_time = time.time()
     return end_time - start_time
+
 
 def encrypt_files(files_to_encrypt, headers_to_encrypt):
     """
@@ -202,11 +205,7 @@ def encrypt_header_only(files_to_encrypt, enc_dir):
 
 
 def encrypt_files_with_best_cipher(folder_path, encryption_results):
-    cipher_functions = {
-        "AES": AES.encrypt_file,
-        "Fernet": Fernet.encrypt_file,
-        "Affine": Affine.encrypt_file,
-    }
+    ciphers_combined = {**ciphers, **ciphers_for_header}  # Combine both dictionaries
 
     enc_dir = "EncryptionWithBestCiphers"
     if not os.path.exists(enc_dir):
@@ -216,15 +215,22 @@ def encrypt_files_with_best_cipher(folder_path, encryption_results):
         file_name = result["File"]
         best_cipher = result["Best Cipher"]
         file_path_to_encrypt = os.path.join(folder_path, file_name)
-        print(f"Encrypting: {file_name}")
+        print(f"Encrypting: {file_name} with {best_cipher}")
         if os.path.exists(file_path_to_encrypt):
-            if best_cipher in cipher_functions:
-                cipher_func = cipher_functions[best_cipher]
+            if best_cipher in ciphers_combined:  # Check in the combined dictionary
+                cipher_info = ciphers_combined[best_cipher]
+                cipher_func = cipher_info["encrypt_file"]
                 output_file_path = os.path.join(
                     f"{enc_dir}", f"{file_name}_{best_cipher.lower()}.enc"
                 )
-                key_args = ciphers[best_cipher]["args"]
-                cipher_func(file_path_to_encrypt, output_file_path, *key_args)
+                key_args = cipher_info["args"]
+                if "header_size" in cipher_info:  # Check if header size is provided
+                    header_size = cipher_info["header_size"]
+                    cipher_func(
+                        file_path_to_encrypt, output_file_path, *key_args, header_size
+                    )
+                else:
+                    cipher_func(file_path_to_encrypt, output_file_path, *key_args)
             else:
                 print(f"Unknown cipher '{best_cipher}' for file '{file_name}'")
         else:
@@ -232,7 +238,7 @@ def encrypt_files_with_best_cipher(folder_path, encryption_results):
     print("Encryption done.")
 
 
-directory_to_check = r"C:\1.src\Repos\Python Projects\InfoSec\Encryption\Files"
+directory_to_check = r"files"
 priortized_files, only_header = check_files(directory_to_check)
 
 encryption_results = encrypt_files(priortized_files, only_header)
