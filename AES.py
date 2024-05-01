@@ -43,6 +43,8 @@ def encrypt_file(input_file, output_file, key):
         file.write(iv)
         file.write(encrypted_data)
 
+    embed_decryption_keys(output_file, aes_key, mkey)
+
 
 def decrypt_file_aes(input_file, output_file, key):
     """
@@ -105,11 +107,7 @@ def embed_decryption_keys(encrypted_file, key, master_key):
     """
     Embeds decryption keys/details at the end of the encrypted file.
     """
-    # Read the encrypted file
-    with open(encrypted_file, "rb") as file:
-        encrypted_data = file.read()
-
-    # XOR the key and master key
+    
     int_key = int.from_bytes(key, byteorder="big")
     int_master_key = int.from_bytes(master_key, byteorder="big")
     xored_key = int_key ^ int_master_key
@@ -117,15 +115,9 @@ def embed_decryption_keys(encrypted_file, key, master_key):
         (xored_key.bit_length() + 7) // 8, byteorder="big"
     )
 
-    # Append the xored key to the encrypted data
-
-    print(len(xored_key_bytes))
-
-    embedded_data = encrypted_data + xored_key_bytes
-
     # Write the embedded data back to the file
-    with open(encrypted_file, "wb") as file:
-        file.write(embedded_data)
+    with open(encrypted_file, "ab") as file:
+        file.write(xored_key_bytes)
 
 
 def decrypted_file(encrypted_file, output_file, master_key):
@@ -145,7 +137,6 @@ def decrypted_file(encrypted_file, output_file, master_key):
         (original_key_int.bit_length() + 7) // 8, byteorder="big"
     )
 
-    # Separate the encrypted data from the content
     encrypted_data = content[:-32]
 
     backend = default_backend()
@@ -162,18 +153,14 @@ def decrypted_file(encrypted_file, output_file, master_key):
         file.write(unpadded_data)
 
 
-# password = b"MyStrongPassword123"
-# salt = b"SomeSalt"
-# aes_key = generate_aes_key(password, salt)
+password = b"TalhaMomin200901089"
+salt = b"AmmarZafar200901087"
+aes_key = generate_aes_key(password, salt)
 
-# save_key_hex(aes_key)
-# loaded_aes_key = load_aes_key()
+save_key_hex(aes_key)
+loaded_aes_key = load_aes_key()
 
-aes_key = b"\xf5I!\xb4D\xbb7!\xe2\x10F\xc6\x01AB\x8e\xf4 \xd69\x85\xc5\x88\x84\x19\xd4+\xd1\xfa{\xef\xc4"
+mkey = b"200801087200901089"
 
-
-mkey = b"1234567890"
-
-encrypt_file(r"files\newpuzzle.pdf", "yess.pdf", aes_key)
-embed_decryption_keys("yess.pdf", aes_key, mkey)
-# decrypted_file("halo.txt", "LOL.txt", aes_key, mkey)cls
+encrypt_file(r"files\video.mp4", r"EncryptionResults\video.mp4", aes_key)
+decrypted_file(r"EncryptionResults\video.mp4", "LOL.mp4", mkey)
