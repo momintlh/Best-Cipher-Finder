@@ -5,7 +5,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import os
 
-iv = os.urandom(16)  # Generate a random IV (Initialization Vector), 
+iv = os.urandom(16)  # Generate a random IV (Initialization Vector),
 
 
 def generate_aes_key(password, salt, key_length=32):
@@ -40,7 +40,7 @@ def encrypt_file(input_file, output_file, key):
     encrypted_data = encryptor.update(padded_data) + encryptor.finalize()
 
     with open(output_file, "wb") as file:
-        file.write(iv)  
+        file.write(iv)
         file.write(encrypted_data)
 
 
@@ -101,10 +101,79 @@ def encrypt_header_aes(input_file, output_file, key, header_size):
         file.write(iv + encrypted_header + content)
 
 
-password = b"MyStrongPassword123"
-salt = b"SomeSalt"
-aes_key = generate_aes_key(password, salt)
+def embed_decryption_keys(encrypted_file, key, master_key):
+    """
+    Embeds decryption keys/details at the end of the encrypted file.
+    """
+    # Read the encrypted file
+    with open(encrypted_file, "rb") as file:
+        encrypted_data = file.read()
+
+    # XOR the key and master key
+    int_key = int.from_bytes(key, byteorder="big")
+    int_master_key = int.from_bytes(master_key, byteorder="big")
+    xored_key = int_key ^ int_master_key
+    xored_key_bytes = xored_key.to_bytes(
+        (xored_key.bit_length() + 7) // 8, byteorder="big"
+    )
+
+    # Append the xored key to the encrypted data
+
+    print(len(xored_key_bytes))
+
+    embedded_data = encrypted_data + xored_key_bytes
+
+    # Write the embedded data back to the file
+    with open(encrypted_file, "wb") as file:
+        file.write(embedded_data)
 
 
-save_key_hex(aes_key)
-loaded_aes_key = load_aes_key()
+def decrypted_file(encrypted_file, output_file, master_key):
+    with open(encrypted_file, "rb") as file:
+        iv = file.read(16)
+        content = file.read()
+
+    # Read the xored key from the end of the content
+    xored_key_bytes = content[-32:]
+    xored_key_int = int.from_bytes(xored_key_bytes, byteorder="big")
+    master_key_int = int.from_bytes(master_key, byteorder="big")
+
+    original_key_int = xored_key_int ^ master_key_int
+
+    # Convert the original key back to bytes
+    original_key_bytes = original_key_int.to_bytes(
+        (original_key_int.bit_length() + 7) // 8, byteorder="big"
+    )
+
+    # Separate the encrypted data from the content
+    encrypted_data = content[:-32]
+
+    backend = default_backend()
+    cipher = Cipher(algorithms.AES(original_key_bytes), modes.CFB(iv), backend=backend)
+    decryptor = cipher.decryptor()
+
+    decrypted_data = decryptor.update(encrypted_data) + decryptor.finalize()
+
+    # Unpad the decrypted data
+    unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
+    unpadded_data = unpadder.update(decrypted_data) + unpadder.finalize()
+
+    with open(output_file, "wb") as file:
+        file.write(unpadded_data)
+
+
+# password = b"MyStrongPassword123"
+# salt = b"SomeSalt"
+# aes_key = generate_aes_key(password, salt)
+
+# save_key_hex(aes_key)
+# loaded_aes_key = load_aes_key()
+
+aes_key = b"\xf5I!\xb4D\xbb7!\xe2\x10F\xc6\x01AB\x8e\xf4 \xd69\x85\xc5\x88\x84\x19\xd4+\xd1\xfa{\xef\xc4"
+
+
+mkey = b"1234567890"
+
+encrypt_file(r"files\newpuzzle.pdf", "yess.pdf", aes_key)
+embed_decryption_keys("yess.pdf", aes_key, mkey)
+# decrypted_file("halo.txt", "LOL.txt", aes_key, mkey)cls
