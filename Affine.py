@@ -1,6 +1,3 @@
-import os
-
-
 def encrypt_file(input_file, output_file, key_a, key_b):
     """
     Encrypts the content of the input file and saves it to the output file using the Affine cipher with the provided keys.
@@ -44,15 +41,24 @@ def decrypt_file_affine(input_file, output_file, key_a, key_b):
         file.write(decrypted_data)
 
 
-# Helper functions for Affine Cipher encryption and decryption
+def chunk_data(data, chunk_size):
+    """
+    Splits the data into smaller chunks of a specified size.
+    """
+    return (data[i : i + chunk_size] for i in range(0, len(data), chunk_size))
+
+
 def encrypt_data_affine(data, key_a, key_b):
     """
     Encrypts binary data using the Affine cipher with the provided keys.
     """
     encrypted_data = bytearray()
-    for byte in data:
-        encrypted_byte = (byte * key_a + key_b) % 256
-        encrypted_data.append(encrypted_byte)
+    for batch in chunk_data(data, 1024): 
+        encrypted_batch = []
+        for byte in batch:
+            encrypted_byte = (byte * key_a + key_b) % 256
+            encrypted_batch.append(encrypted_byte)
+        encrypted_data.extend(encrypted_batch)
     return bytes(encrypted_data)
 
 
@@ -61,9 +67,15 @@ def decrypt_data_affine(data, key_a, key_b):
     Decrypts binary data using the Affine cipher with the provided keys.
     """
     decrypted_data = bytearray()
-    for byte in data:
-        decrypted_byte = (mod_inverse(key_a, 256) * (byte - key_b)) % 256
-        decrypted_data.append(decrypted_byte)
+    inv_a = mod_inverse(key_a, 256) 
+
+    for batch in chunk_data(data, 1024):  
+        decrypted_batch = []
+        for byte in batch:
+            decrypted_byte = (inv_a * (byte - key_b)) % 256
+            decrypted_batch.append(decrypted_byte)
+        decrypted_data.extend(decrypted_batch)
+
     return bytes(decrypted_data)
 
 
@@ -96,3 +108,6 @@ b = 3241323
 
 write_key_to_file(a, b, r"Keys\affine.key")
 key_a_loaded, key_b_loaded = read_key_from_file(r"Keys\affine.key")
+
+encrypt_file(r"files\newpuzzle.pdf", r"video.pdf", a, b)
+decrypt_file_affine(r"video.pdf", r"heeh.pdf", a, b)
