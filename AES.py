@@ -162,5 +162,4 @@ loaded_aes_key = load_aes_key()
 
 mkey = b"200801087200901089"
 
-encrypt_file(r"files\video.mp4", r"EncryptionResults\video.mp4", aes_key)
-decrypted_file(r"EncryptionResults\video.mp4", "LOL.mp4", mkey)
+# encrypt_file(r"files\Camera Roll.zip", r"EncryptionResults\pic.zip", aes_key)
