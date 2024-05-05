@@ -108,6 +108,3 @@ b = 3241323
 
 write_key_to_file(a, b, r"Keys\affine.key")
 key_a_loaded, key_b_loaded = read_key_from_file(r"Keys\affine.key")
-
-encrypt_file(r"files\newpuzzle.pdf", r"video.pdf", a, b)
-decrypt_file_affine(r"video.pdf", r"heeh.pdf", a, b)
