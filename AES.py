@@ -161,5 +161,3 @@ save_key_hex(aes_key)
 loaded_aes_key = load_aes_key()
 
 mkey = b"200801087200901089"
-
-# encrypt_file(r"files\Camera Roll.zip", r"EncryptionResults\pic.zip", aes_key)
