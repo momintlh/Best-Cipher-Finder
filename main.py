@@ -241,8 +241,8 @@ def encrypt_files_with_best_cipher(folder_path, encryption_results):
 directory_to_check = r"files"
 priortized_files, only_header = check_files(directory_to_check)
 
-# encryption_results = encrypt_files(priortized_files, only_header)
+encryption_results = encrypt_files(priortized_files, only_header)
 
-# print(tabulate(encryption_results, headers="keys", tablefmt="fancy_grid"))
+print(tabulate(encryption_results, headers="keys", tablefmt="fancy_grid"))
 
-# encrypt_files_with_best_cipher(r"Files", encryption_results)
+encrypt_files_with_best_cipher(r"Files", encryption_results)
