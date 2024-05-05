@@ -5,8 +5,7 @@ __pycache__/
 
 # custom:
 Keys
-files/Factorio.zip
-files/video.mp4
+files/
 EncryptionResults/
 EncryptionWithBestCiphers/
 test.py

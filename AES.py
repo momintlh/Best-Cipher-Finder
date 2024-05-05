@@ -43,7 +43,7 @@ def encrypt_file(input_file, output_file, key):
         file.write(iv)
         file.write(encrypted_data)
 
-    embed_decryption_keys(output_file, aes_key, mkey)
+    embed_decryption_keys(output_file, aes_key, master_key)
 
 
 def decrypt_file_aes(input_file, output_file, key):
@@ -160,4 +160,4 @@ aes_key = generate_aes_key(password, salt)
 save_key_hex(aes_key)
 loaded_aes_key = load_aes_key()
 
-mkey = b"200801087200901089"
+master_key = b"200801087200901089"

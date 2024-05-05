@@ -44,6 +44,7 @@ def decrypt_file(input_file, output_file, key):
     cipher = Fernet(key)
     with open(input_file, "rb") as file:
         encrypted_data = file.read()
+
     decrypted_data = cipher.decrypt(encrypted_data)
     with open(output_file, "wb") as file:
         file.write(decrypted_data)
@@ -59,11 +60,51 @@ def encrypt_header_fernet(input_file, output_file, key, header_size):
     with open(input_file, "rb") as file:
         content = file.read()
 
-    # Combine encrypted header and content
+    # Combining header + content
     encrypted_content = encrypted_header + content[header_size:]
     with open(output_file, "wb") as file:
         file.write(encrypted_content)
 
+def embed_decryption_keys(encrypted_file, key, master_key):
+    """
+    Embeds decryption keys/details at the end of the encrypted file.
+    """
+  
+    int_key = int.from_bytes(key, byteorder="big")
+    int_master_key = int.from_bytes(master_key, byteorder="big")
+    
+    xored_key = int_key ^ int_master_key
+
+    xored_key_bytes = xored_key.to_bytes((xored_key.bit_length() + 7) // 8, byteorder="big")
+
+    with open(encrypted_file, "ab") as file:
+        file.write(xored_key_bytes)
+
+def decrypt_file_(input_file, output_file, master_key):
+    """
+    Decrypts the content of the input file using the embedded decryption key and saves it to the output file.
+    """
+    with open(input_file, "rb") as file:
+        encrypted_data = file.read()
+
+    
+    embedded_key_bytes = encrypted_data[-44:]
+
+    embedded_key = int.from_bytes(embedded_key_bytes, byteorder="big")
+    int_master_key = int.from_bytes(master_key, byteorder="big")
+
+    cipher = Fernet(key)
+
+    original_key = embedded_key ^ int_master_key
+    original_key = original_key.to_bytes((original_key.bit_length() + 7) // 8, byteorder="big")
+
+    decrypted_data = cipher.decrypt(encrypted_data[:-len(original_key)])
+
+    with open(output_file, "wb") as file:
+        file.write(decrypted_data)
+
 
 generate_key()
 key = load_key()
+
+master_key = b"200801087200901089"

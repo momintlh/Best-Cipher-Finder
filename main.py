@@ -19,7 +19,7 @@ ciphers_for_header = {
     "AES_header_only": {
         "encrypt_file": AES.encrypt_header_aes,
         "args": (AES.aes_key,),
-        "header_size": 100,
+        "header_size": 100, 
     },
     "Affine_header_only": {
         "encrypt_file": Affine.encrypt_header_affine,
@@ -33,8 +33,7 @@ ciphers_for_header = {
     },
 }
 
-
-def check_files(directory_to_check):
+def priortize_files(directory_to_check):
     """Check files in the specified directory for encryption."""
     # Get recent files
     recent_files_dir = glob.glob(
@@ -103,7 +102,6 @@ def check_files(directory_to_check):
         f[1] for f in ready_for_encryption if f[7]
     ]
 
-
 def encryption_time_estimate(file_path, output_path, cipher_func, *args):
     """
     Encrypts the file using the provided cipher function and returns the encryption time.
@@ -112,7 +110,6 @@ def encryption_time_estimate(file_path, output_path, cipher_func, *args):
     cipher_func(file_path, output_path, *args)
     end_time = time.time()
     return end_time - start_time
-
 
 def encrypt_files(files_to_encrypt, headers_to_encrypt):
     """
@@ -128,8 +125,9 @@ def encrypt_files(files_to_encrypt, headers_to_encrypt):
     encryption_results.extend(encrypt_full_files(files_to_encrypt, enc_dir))
     encryption_results.extend(encrypt_header_only(headers_to_encrypt, enc_dir))
 
-    return encryption_results
+    print(tabulate(encryption_results, headers="keys", tablefmt="fancy_grid"))
 
+    return encryption_results
 
 def encrypt_full_files(files_to_encrypt, enc_dir):
     """
@@ -152,6 +150,7 @@ def encrypt_full_files(files_to_encrypt, enc_dir):
         ]
         print(f"Finding the best cipher for: {file_name}")
 
+        # print(encryption_times)
         min_time = min(encryption_times)
         best_cipher = list(ciphers.keys())[encryption_times.index(min_time)]
 
@@ -165,7 +164,6 @@ def encrypt_full_files(files_to_encrypt, enc_dir):
         )
 
     return encryption_results
-
 
 def encrypt_header_only(files_to_encrypt, enc_dir):
     """
@@ -203,7 +201,6 @@ def encrypt_header_only(files_to_encrypt, enc_dir):
 
     return encryption_results
 
-
 def encrypt_files_with_best_cipher(folder_path, encryption_results):
     ciphers_combined = {**ciphers, **ciphers_for_header}  # Combine both dictionaries
 
@@ -217,7 +214,7 @@ def encrypt_files_with_best_cipher(folder_path, encryption_results):
         file_path_to_encrypt = os.path.join(folder_path, file_name)
         print(f"Encrypting: {file_name} with {best_cipher}")
         if os.path.exists(file_path_to_encrypt):
-            if best_cipher in ciphers_combined:  # Check in the combined dictionary
+            if best_cipher in ciphers_combined: 
                 cipher_info = ciphers_combined[best_cipher]
                 cipher_func = cipher_info["encrypt_file"]
                 output_file_path = os.path.join(
@@ -239,10 +236,8 @@ def encrypt_files_with_best_cipher(folder_path, encryption_results):
 
 
 directory_to_check = r"files"
-priortized_files, only_header = check_files(directory_to_check)
+priortized_files, only_header = priortize_files(directory_to_check)
 
 encryption_results = encrypt_files(priortized_files, only_header)
-
-print(tabulate(encryption_results, headers="keys", tablefmt="fancy_grid"))
 
 encrypt_files_with_best_cipher(r"Files", encryption_results)
