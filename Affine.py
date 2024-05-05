@@ -119,7 +119,3 @@ write_key_to_file(a, b, r"Keys\affine.key")
 key_a_loaded, key_b_loaded = read_key_from_file(r"Keys\affine.key")
 
 master_key = b"200801087200901089"
-
-
-encrypt_file(r"files\imp.txt", r"imp_encrypted.txt", a, b)
-embed_decryption_keys(r"imp_encrypted.txt", a, b, master_key)

