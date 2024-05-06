@@ -1,20 +1,25 @@
+import shutil
+import time
 from cryptography.fernet import Fernet
 import os
 
-
-def generate_key():
+def generate_key(file=False):
     """
     Generates a new encryption key and saves it to a file.
     """
-    keys_dir = "Keys"
-    if not os.path.exists(keys_dir):
-        os.makedirs(keys_dir)
-
-    key_path = os.path.join(keys_dir, "fernet.key")
-
     key = Fernet.generate_key()
-    with open(key_path, "wb") as key_file:
-        key_file.write(key)
+   
+    if file:
+        keys_dir = "Keys"
+        if not os.path.exists(keys_dir):
+            os.makedirs(keys_dir)
+
+        key_path = os.path.join(keys_dir, "fernet.key")
+
+        with open(key_path, "wb") as key_file:
+            key_file.write(key)
+
+    return key
 
 
 def load_key():
@@ -23,7 +28,6 @@ def load_key():
     """
     with open(r"Keys\fernet.key", "rb") as key_file:
         return key_file.read()
-
 
 def encrypt_file(input_file, output_file, key):
     """
@@ -49,21 +53,18 @@ def decrypt_file(input_file, output_file, key):
     with open(output_file, "wb") as file:
         file.write(decrypted_data)
 
-
-def encrypt_header_fernet(input_file, output_file, key, header_size):
+def encrypt_header_fernet(input_file, key, header_size):
     cipher = Fernet(key)
-    with open(input_file, "rb") as file:
+    
+    with open(input_file, "r+b") as file:
         header = file.read(header_size)
+        
+        encrypted_header = cipher.encrypt(header)
 
-    encrypted_header = cipher.encrypt(header)
-
-    with open(input_file, "rb") as file:
-        content = file.read()
-
-    # Combining header + content
-    encrypted_content = encrypted_header + content[header_size:]
-    with open(output_file, "wb") as file:
-        file.write(encrypted_content)
+        file.seek(0)
+        file.write(encrypted_header)
+        file.seek(header_size, os.SEEK_SET) 
+        shutil.copyfileobj(file, file) 
 
 def embed_decryption_keys(encrypted_file, key, master_key):
     """
@@ -104,7 +105,5 @@ def decrypt_file_(input_file, output_file, master_key):
         file.write(decrypted_data)
 
 
-generate_key()
-key = load_key()
-
+key = generate_key()
 master_key = b"200801087200901089"

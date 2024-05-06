@@ -1,3 +1,5 @@
+import shutil
+import time
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
@@ -28,7 +30,7 @@ def encrypt_file(input_file, output_file, key):
     """
     backend = default_backend()
     cipher = Cipher(algorithms.AES(key), modes.CFB(iv), backend=backend)
-
+    
     encryptor = cipher.encryptor()
     with open(input_file, "rb") as file:
         data = file.read()
@@ -67,6 +69,27 @@ def decrypt_file_aes(input_file, output_file, key):
     with open(output_file, "wb") as file:
         file.write(unpadded_data)
 
+def encrypt_header_aes(input_file, key, header_size):
+    with open(input_file, "rb") as file:
+        header = file.read(header_size)
+
+    backend = default_backend()
+    cipher = Cipher(algorithms.AES(key), modes.CFB(iv), backend=backend)
+    encryptor = cipher.encryptor()
+    encrypted_header = encryptor.update(header) + encryptor.finalize()
+
+   
+    with open(input_file, "r+b") as file:
+        
+        file.seek(0)
+        file.write(iv + encrypted_header)
+
+        
+        file.seek(header_size, os.SEEK_SET) 
+        shutil.copyfileobj(file, file)
+
+
+
 
 def save_key_hex(key):
     keys_dir = "Keys"
@@ -81,26 +104,6 @@ def save_key_hex(key):
 def load_aes_key():
     with open(r"Keys\AES.key", "rb") as key_file:
         return key_file.read()
-
-
-def encrypt_header_aes(input_file, output_file, key, header_size):
-    """
-    Encrypts the header (first header_size bytes) of the input file and saves it back to the original file using AES encryption.
-    """
-
-    with open(input_file, "rb") as file:
-        header = file.read(header_size)
-
-    backend = default_backend()
-    cipher = Cipher(algorithms.AES(key), modes.CFB(iv), backend=backend)
-    encryptor = cipher.encryptor()
-    encrypted_header = encryptor.update(header) + encryptor.finalize()
-
-    with open(input_file, "rb") as file:
-        content = file.read()[header_size:]
-
-    with open(output_file, "wb") as file:
-        file.write(iv + encrypted_header + content)
 
 
 def embed_decryption_keys(encrypted_file, key, master_key):
@@ -156,8 +159,5 @@ def decrypted_file(encrypted_file, output_file, master_key):
 password = b"TalhaMomin200901089"
 salt = b"AmmarZafar200901087"
 aes_key = generate_aes_key(password, salt)
-
-save_key_hex(aes_key)
-loaded_aes_key = load_aes_key()
 
 master_key = b"200801087200901089"
