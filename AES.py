@@ -69,26 +69,48 @@ def decrypt_file_aes(input_file, output_file, key):
     with open(output_file, "wb") as file:
         file.write(unpadded_data)
 
-def encrypt_header_aes(input_file, key, header_size):
+# def encrypt_header_aes(input_file, key, header_size, output_file=None):
+#     with open(input_file, "rb") as file:
+#         header = file.read(header_size)
+
+#     backend = default_backend()
+#     cipher = Cipher(algorithms.AES(key), modes.CFB(iv), backend=backend)
+#     encryptor = cipher.encryptor()
+#     encrypted_header = encryptor.update(header) + encryptor.finalize()
+
+#     if output_file is not None:
+#         with open(output_file, "wb") as outfile:
+#             outfile.write(iv + encrypted_header)
+#             shutil.copyfileobj(open(input_file, 'rb'), outfile)
+#     with open(input_file, "r+b") as file:
+#         file.seek(0)
+#         file.write(iv + encrypted_header)
+#         file.seek(header_size, os.SEEK_SET) 
+#         shutil.copyfileobj(file, file)
+    
+#     # embed_decryption_keys(input_file, aes_key, master_key)
+
+def encrypt_header_aes(input_file, key, header_size, output_file=None):
     with open(input_file, "rb") as file:
         header = file.read(header_size)
+        remaining_data = file.read()  # Read the remaining data after the header
 
     backend = default_backend()
     cipher = Cipher(algorithms.AES(key), modes.CFB(iv), backend=backend)
     encryptor = cipher.encryptor()
     encrypted_header = encryptor.update(header) + encryptor.finalize()
 
-   
-    with open(input_file, "r+b") as file:
-        
-        file.seek(0)
-        file.write(iv + encrypted_header)
+    xor = embed_decryption_keys2(input_file, key, master_key)
 
-        
-        file.seek(header_size, os.SEEK_SET) 
-        shutil.copyfileobj(file, file)
-
-
+    if output_file is not None:
+        with open(output_file, "wb") as outfile:
+            outfile.write(iv + encrypted_header)
+            outfile.write(remaining_data + xor)
+    else:
+        with open(input_file, "r+b") as file:
+            file.seek(0)
+            file.write(iv + encrypted_header)
+            file.write(remaining_data + xor)
 
 
 def save_key_hex(key):
@@ -99,7 +121,6 @@ def save_key_hex(key):
     key_path = os.path.join(keys_dir, "AES.key")
     with open(key_path, "wb") as key_file:
         key_file.write(key)
-
 
 def load_aes_key():
     with open(r"Keys\AES.key", "rb") as key_file:
@@ -122,6 +143,23 @@ def embed_decryption_keys(encrypted_file, key, master_key):
     with open(encrypted_file, "ab") as file:
         file.write(xored_key_bytes)
 
+def embed_decryption_keys2(encrypted_file, key, master_key):
+    """
+    Embeds decryption keys/details at the end of the encrypted file.
+    """
+    
+    int_key = int.from_bytes(key, byteorder="big")
+    int_master_key = int.from_bytes(master_key, byteorder="big")
+    xored_key = int_key ^ int_master_key
+    xored_key_bytes = xored_key.to_bytes(
+        (xored_key.bit_length() + 7) // 8, byteorder="big"
+    )
+
+    return xored_key_bytes
+
+    # # Write the embedded data back to the file
+    # with open(encrypted_file, "ab") as file:
+    #     file.write(xored_key_bytes)
 
 def decrypted_file(encrypted_file, output_file, master_key):
     with open(encrypted_file, "rb") as file:

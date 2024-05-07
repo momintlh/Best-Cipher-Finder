@@ -14,20 +14,29 @@ def encrypt_file(input_file, output_file, key_a, key_b):
 
     with open(output_file, "wb") as file:
         file.write(encrypted_data)
+    
+    embed_decryption_keys(output_file, key_a, key_b, master_key)
 
-def encrypt_header_affine(input_file, key_a, key_b, header_size):
+def encrypt_header_affine(input_file, key_a, key_b, header_size, output_file=None):
     """
     Encrypts the header (first header_size bytes) of the input file and saves it inside the original file using the Affine cipher with the provided keys.
     """
     with open(input_file, "r+b") as file:
-        header = file.read(header_size) 
+        header = file.read(header_size)
 
         encrypted_header = encrypt_data_affine(header, key_a, key_b)
-        file.seek(0)
-        file.write(encrypted_header)
 
-        file.seek(header_size, os.SEEK_SET) 
-        shutil.copyfileobj(file, file)
+        if output_file:
+            with open(output_file, "wb") as outfile:
+                outfile.write(encrypted_header)
+                shutil.copyfileobj(file, outfile)
+        else:
+            file.seek(0)
+            file.write(encrypted_header)
+            file.seek(header_size, os.SEEK_SET) 
+            shutil.copyfileobj(file, file)
+
+    embed_decryption_keys(input_file, key_a, key_b, master_key)
 
 def decrypt_file_affine(input_file, output_file, key_a, key_b):
     """

@@ -40,7 +40,6 @@ def encrypt_file(input_file, output_file, key):
     with open(output_file, "wb") as file:
         file.write(encrypted_data)
 
-
 def decrypt_file(input_file, output_file, key):
     """
     Decrypts the content of the input file and saves it to the output file using the provided key.
@@ -53,18 +52,44 @@ def decrypt_file(input_file, output_file, key):
     with open(output_file, "wb") as file:
         file.write(decrypted_data)
 
-def encrypt_header_fernet(input_file, key, header_size):
+def encrypt_header_fernet(input_file, key, header_size, output_file=None):
     cipher = Fernet(key)
     
     with open(input_file, "r+b") as file:
         header = file.read(header_size)
-        
         encrypted_header = cipher.encrypt(header)
 
-        file.seek(0)
-        file.write(encrypted_header)
-        file.seek(header_size, os.SEEK_SET) 
-        shutil.copyfileobj(file, file) 
+        if output_file is not None:
+            with open(output_file, "wb") as outfile:
+                outfile.write(encrypted_header)
+                shutil.copyfileobj(file, outfile)
+        else:
+            file.seek(0)
+            file.write(encrypted_header)
+            file.seek(header_size, os.SEEK_SET) 
+            shutil.copyfileobj(file, file)
+
+    # embed_decryption_keys(input_file, key, master_key)
+
+def encrypt_header_aes(input_file, key, header_size, output_file=None):
+    cipher = Fernet(key)
+
+    with open(input_file, "rb") as file:
+        header = file.read(header_size)
+        remaining_data = file.read()  # Read the remaining data after the header
+
+    encrypted_header = cipher.encrypt(header)
+    xor = embed_decryption_keys2(input_file, key, master_key)
+
+    if output_file is not None:
+        with open(output_file, "wb") as outfile:
+            outfile.write(encrypted_header)
+            outfile.write(remaining_data + xor)
+    else:
+        with open(input_file, "r+b") as file:
+            file.seek(0)
+            file.write(encrypted_header)
+            file.write(remaining_data + xor)
 
 def embed_decryption_keys(encrypted_file, key, master_key):
     """
@@ -80,6 +105,20 @@ def embed_decryption_keys(encrypted_file, key, master_key):
 
     with open(encrypted_file, "ab") as file:
         file.write(xored_key_bytes)
+
+def embed_decryption_keys2(encrypted_file, key, master_key):
+    """
+    Embeds decryption keys/details at the end of the encrypted file.
+    """
+  
+    int_key = int.from_bytes(key, byteorder="big")
+    int_master_key = int.from_bytes(master_key, byteorder="big")
+    
+    xored_key = int_key ^ int_master_key
+
+    xored_key_bytes = xored_key.to_bytes((xored_key.bit_length() + 7) // 8, byteorder="big")
+    return  xored_key_bytes
+
 
 def decrypt_file_(input_file, output_file, master_key):
     """
